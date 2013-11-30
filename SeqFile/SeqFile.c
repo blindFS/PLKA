@@ -5,7 +5,7 @@
 #include <linux/list.h>
 #include <linux/sched.h>
 
-#define PROC_NAME   "procs"
+#define PROC_NAME   "SeqProcess"
 
 MODULE_AUTHOR("hzc");
 MODULE_LICENSE("GPL");
@@ -19,13 +19,13 @@ MODULE_LICENSE("GPL");
  */
 static void *my_seq_start(struct seq_file *s, loff_t *pos)
 {
-    static unsigned long counter = 0;
+    struct task_struct *task = &init_task;
 
     /* beginning a new sequence ? */
     if ( *pos == 0 )
     {
         /* yes => return a non null value to begin the sequence */
-        return &counter;
+        return task;
     }
     else
     {
@@ -42,9 +42,10 @@ static void *my_seq_start(struct seq_file *s, loff_t *pos)
  */
 static void *my_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
-    unsigned long *tmp_v = (unsigned long *)v;
-    (*tmp_v)++;
+    struct task_struct *task = next_task((struct task_struct *)v);
     (*pos)++;
+    if (task != &init_task)
+        return task;
     return NULL;
 }
 
@@ -63,13 +64,8 @@ static void my_seq_stop(struct seq_file *s, void *v)
  */
 static int my_seq_show(struct seq_file *s, void *v)
 {
-    struct task_struct *task;
-    int count = 0;
-    for_each_process(task) {
-        count++;
-        seq_printf(s, "%d\t%s\n", task->pid, task->comm );
-    }
-    seq_printf(s, "%d processes in all.\n", count);
+    struct task_struct *task = (struct task_struct *)v;
+    seq_printf(s, "%d\t%s\n", task->pid, task->comm );
     return 0;
 }
 
