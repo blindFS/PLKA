@@ -17,19 +17,18 @@ MODULE_LICENSE("GPL");
  *  - after the function stop (end of sequence)
  *
  */
+struct task_struct *mcurrent = &init_task;
+
 static void *my_seq_start(struct seq_file *s, loff_t *pos)
 {
     struct task_struct *task = &init_task;
 
-    /* beginning a new sequence ? */
-    if ( *pos == 0 )
-    {
-        /* yes => return a non null value to begin the sequence */
+    if (*pos == 0)
         return task;
+    else if (mcurrent != &init_task) {
+        return next_task(mcurrent);
     }
-    else
-    {
-        /* no => it's the end of the sequence, return end to stop reading */
+    else {
         *pos = 0;
         return NULL;
     }
@@ -43,9 +42,11 @@ static void *my_seq_start(struct seq_file *s, loff_t *pos)
 static void *my_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
     struct task_struct *task = next_task((struct task_struct *)v);
+    mcurrent = task;
     (*pos)++;
-    if (task != &init_task)
+    if (task != &init_task) {
         return task;
+    }
     return NULL;
 }
 
@@ -65,7 +66,10 @@ static void my_seq_stop(struct seq_file *s, void *v)
 static int my_seq_show(struct seq_file *s, void *v)
 {
     struct task_struct *task = (struct task_struct *)v;
-    seq_printf(s, "%d\t%s\n", task->pid, task->comm );
+    int i;
+    for (i = 0; i < 20; i++) {
+        seq_printf(s, "%d\t%s\n", task->pid, task->comm );
+    }
     return 0;
 }
 

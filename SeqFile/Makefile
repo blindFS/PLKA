@@ -7,3 +7,9 @@ default:
 
 clean:
 	rm -rf *.o *~ core .depend *.order *.symvers .*.cmd *.ko *.mod.c .tmp_versions
+
+ins:
+	insmod SeqFile.ko
+
+rm:
+	rmmod SeqFile
