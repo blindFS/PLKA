@@ -17,7 +17,7 @@ MODULE_LICENSE("GPL");
  *  - after the function stop (end of sequence)
  *
  */
-struct task_struct *mcurrent = &init_task;
+struct task_struct *mcurrent;
 
 static void *my_seq_start(struct seq_file *s, loff_t *pos)
 {
@@ -25,13 +25,12 @@ static void *my_seq_start(struct seq_file *s, loff_t *pos)
 
     if (*pos == 0)
         return task;
-    else if (mcurrent != &init_task) {
+    if (mcurrent != &init_task) {
+        seq_printf(s, "continue\n");
         return next_task(mcurrent);
     }
-    else {
-        *pos = 0;
-        return NULL;
-    }
+    *pos = 0;
+    return NULL;
 }
 
 /**
