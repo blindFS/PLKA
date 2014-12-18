@@ -27,9 +27,9 @@ static void *my_seq_start(struct seq_file *s, loff_t *pos)
         return task;
     if (mcurrent != &init_task) {
         seq_printf(s, "continue\n");
-        return next_task(mcurrent);
+        return mcurrent;
     }
-    *pos = 0;
+    // *pos = 0;
     return NULL;
 }
 
@@ -40,11 +40,10 @@ static void *my_seq_start(struct seq_file *s, loff_t *pos)
  */
 static void *my_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
-    struct task_struct *task = next_task((struct task_struct *)v);
-    mcurrent = task;
+    mcurrent = next_task((struct task_struct *)v);
     (*pos)++;
-    if (task != &init_task) {
-        return task;
+    if (mcurrent != &init_task) {
+        return mcurrent;
     }
     return NULL;
 }
@@ -65,10 +64,7 @@ static void my_seq_stop(struct seq_file *s, void *v)
 static int my_seq_show(struct seq_file *s, void *v)
 {
     struct task_struct *task = (struct task_struct *)v;
-    int i;
-    for (i = 0; i < 20; i++) {
-        seq_printf(s, "%d\t%s\n", task->pid, task->comm );
-    }
+    seq_printf(s, "pid:%d\ttgid:%d\tname:%s\tparent_pid:%d\n", task->pid, task->tgid, task->comm, task->parent->pid);
     return 0;
 }
 

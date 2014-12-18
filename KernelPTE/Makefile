@@ -1,7 +1,7 @@
-obj-m := ProcRW.o
+obj-m := print_kernel_pte.o
 KERNELDIR := /usr/src/linux-headers-$(shell uname -r)
 PWD := $(shell pwd)
-MOD := ProcRW.ko
+MOD := print_kernel_pte.ko
 
 default:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules

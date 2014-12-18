@@ -1,16 +1,8 @@
-obj-m := ProcRW.o
-KERNELDIR := /usr/src/linux-headers-$(shell uname -r)
+obj-m := print_vmalloc.o
+KERNELDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
-MOD := ProcRW.ko
 
-default:
+modules:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
-
-install:
-	insmod $(MOD)
-
-uninstall:
-	rmmod $(MOD)
-
 clean:
 	rm -rf *.o *~ core .depend *.order *.symvers .*.cmd *.ko *.mod.c .tmp_versions
