@@ -18,7 +18,7 @@ static void walk_pte_table(pte_t *pte_table, unsigned long addr)
         cur_addr = addr + index * PAGE_SIZE;
         if(pte_present(pte_table[index]))
         {
-            printk("\t\t\t|Linear: 0x%lx, Phyical: 0x%08llx\n", cur_addr, (unsigned long long)(pte_val(pte_table[index]) & PAGE_MASK));
+            printk("\t|Linear: 0x%lx, Phyical: 0x%08lx, Size:4K\n", cur_addr, (unsigned long)(pte_val(pte_table[index]) & PAGE_MASK));
         }
     }
 }
@@ -27,37 +27,43 @@ static void walk_pmd_table(pmd_t *pmd_table, unsigned long addr)
 {
     int index;
     unsigned long cur_addr;
+    unsigned long val;
 
-    for(index = 442;index < 444/*PTRS_PER_PMD*/;index ++)
+    for(index = 400;index < PTRS_PER_PMD;index ++)
     {
         printk("\t\t|walk_pmd_table, index %d, value 0x%lx\n", index, (unsigned long)pmd_table[index].pmd);
         cur_addr = addr + index * PMD_SIZE;
         if(pmd_present(pmd_table[index]))
         {
-            pte_t *pte_table = pte_offset_kernel(pmd_table + index, cur_addr);
-            walk_pte_table(pte_table, cur_addr);
+            val = pmd_val(pmd_table[index]);
+            if (val & _PAGE_PSE)
+                printk("\t|Linear: 0x%lx, Phyical: 0x%08lx, Size:2M\n", cur_addr, (unsigned long)(val & PAGE_MASK));
+            else {
+                pte_t *pte_table = pte_offset_kernel(pmd_table + index, cur_addr);
+                walk_pte_table(pte_table, cur_addr);
+            }
         }
     }
 }
 
 /*
-static void walk_pud_table(pud_t *pud_table, unsigned long addr)
-{
-    int index;
-    unsigned long cur_addr;
+   static void walk_pud_table(pud_t *pud_table, unsigned long addr)
+   {
+   int index;
+   unsigned long cur_addr;
 
-    for(index = 0;index < PTRS_PER_PUD;index ++)
-    {
-        printk("\t|walk_pud_table, index %d, value 0x%lx\n", index, (unsigned long)pud_table[index].pud);
-        cur_addr = addr + index * PUD_SIZE;
-        if(pud_present(pud_table[index]))
-        {
-            pmd_t *pmd_table = pmd_offset(pud_table + index, cur_addr);
-            walk_pmd_table(pmd_table, cur_addr);
-        }
-    }
-}
-*/
+   for(index = 0;index < PTRS_PER_PUD;index ++)
+   {
+   printk("\t|walk_pud_table, index %d, value 0x%lx\n", index, (unsigned long)pud_table[index].pud);
+   cur_addr = addr + index * PUD_SIZE;
+   if(pud_present(pud_table[index]))
+   {
+   pmd_t *pmd_table = pmd_offset(pud_table + index, cur_addr);
+   walk_pmd_table(pmd_table, cur_addr);
+   }
+   }
+   }
+   */
 
 static void walk_pgd_table(pgd_t *pgd_table, unsigned long addr)
 {
@@ -70,8 +76,8 @@ static void walk_pgd_table(pgd_t *pgd_table, unsigned long addr)
         cur_addr = addr + index * PGDIR_SIZE;
         if(pgd_present(pgd_table[index]))
         {
-        //  pud_t *pud_table = pud_offset(pgd_table + index, cur_addr);
-        //  walk_pud_table(pud_table, cur_addr);
+            //  pud_t *pud_table = pud_offset(pgd_table + index, cur_addr);
+            //  walk_pud_table(pud_table, cur_addr);
             pmd_t *pmd_table = pmd_offset((pud_t *)(pgd_table + index), cur_addr);
             walk_pmd_table(pmd_table, cur_addr);
         }
@@ -80,7 +86,7 @@ static void walk_pgd_table(pgd_t *pgd_table, unsigned long addr)
 
 static void print_kernel_pte(void)
 {
- //   pgd_t *pgd_table = current->mm->pgd;
+    //   pgd_t *pgd_table = current->mm->pgd;
     pgd_t *pgd_table = (pgd_t *)SWAPPER_PG_DIR_ADDR;
 
     printk("===>>> Printing Kernel PTE Started <<<===\n");
